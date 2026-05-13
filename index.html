@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Meal Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{height:100%}
+body{
+  min-height:100%;
+  font-family:'Inter','Arial',sans-serif;
+  background:#fff;
+  color:#111;
+  line-height:1;
+}
+.app{max-width:800px;margin:0 auto;padding:32px 24px;position:relative;min-height:100vh}
+
+/* PAGE TRANSITION */
+.page{transition:opacity .18s cubic-bezier(.4,0,.2,1),transform .18s cubic-bezier(.4,0,.2,1)}
+.page.exit{opacity:0;transform:translateY(-6px);pointer-events:none}
+.page.enter{opacity:1;transform:translateY(0)}
+.page.enter{opacity:1;transform:translateY(0)}
+
+/* BRUTALIST HEADER */
+header{border-bottom:4px solid #111;padding-bottom:24px;margin-bottom:32px}
+header h1{
+  font-family:'Space Grotesk','Arial Black',sans-serif;
+  font-size:clamp(2.4rem,7vw,4rem);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:-.04em;
+  line-height:.9;
+  color:#111;
+}
+header h1 span{color:#d35400;display:inline-block}
+header .sub{
+  font-size:1rem;
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:.15em;
+  color:#555;
+  margin-top:8px;
+}
+header .pills{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+.pill{
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  padding:4px 10px;
+  border:2px solid #111;
+  color:#111;
+  background:#fff;
+}
+.pill.hl{background:#d35400;border-color:#d35400;color:#fff}
+
+/* MENU GRID */
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:0}
+.m-card{
+  border:3px solid #111;
+  padding:28px 20px 24px;
+  cursor:pointer;
+  transition:none;
+  background:#fff;
+}
+.m-card:hover{background:#111;color:#fff}
+.m-card:hover .label{color:#fff}
+.m-card:hover .desc{color:#aaa}
+.m-card .icon{font-size:2rem;display:block;margin-bottom:10px;line-height:1}
+.m-card .label{font-size:1.1rem;font-weight:800;display:block;color:#111;text-transform:uppercase;letter-spacing:-.02em}
+.m-card .desc{font-size:.75rem;font-weight:400;color:#555;display:block;margin-top:6px;line-height:1.3}
+
+/* PANEL */
+.panel{border:3px solid #111;padding:28px 24px;margin-bottom:8px;background:#fff}
+.panel-hd{border-bottom:3px solid #111;padding-bottom:14px;margin-bottom:24px;display:flex;align-items:center;gap:8px}
+.panel-hd .back{
+  font-size:1.4rem;font-weight:700;background:none;border:2px solid #111;color:#111;cursor:pointer;
+  padding:2px 10px;line-height:1;border-radius:0;
+}
+.panel-hd .back:hover{background:#111;color:#fff}
+.panel-hd h2{
+  font-family:'Space Grotesk','Arial Black',sans-serif;
+  font-size:clamp(1.3rem,3.5vw,1.8rem);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:-.03em;
+  color:#111;
+  flex:1;
+}
+
+/* FIELD */
+.field{margin-bottom:22px}
+.field label{
+  display:block;
+  font-size:.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#555;
+  margin-bottom:6px;
+}
+.field .hint{font-weight:400;color:#888;margin-left:4px;letter-spacing:0;text-transform:none}
+input[type="text"],input[type="number"]{
+  width:100%;padding:12px 14px;border:3px solid #111;border-radius:0;
+  background:#fff;color:#111;font-size:1rem;font-weight:700;
+  font-family:'Inter','Arial',sans-serif;outline:none;
+}
+input:focus{border-color:#d35400}
+input::placeholder{color:#bbb;font-weight:400}
+
+/* CHIPS */
+.chip-group{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip{
+  padding:7px 16px;border:3px solid #111;border-radius:0;
+  background:#fff;color:#111;font-size:.78rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;
+  cursor:pointer;transition:none;font-family:'Inter','Arial',sans-serif;user-select:none;
+}
+.chip:hover{background:#111;color:#fff}
+.chip.active{background:#d35400;border-color:#d35400;color:#fff}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:14px 28px;border:3px solid #111;border-radius:0;
+  font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+  cursor:pointer;transition:none;font-family:'Inter','Arial',sans-serif;
+}
+.btn-primary{background:#d35400;border-color:#d35400;color:#fff}
+.btn-primary:hover{background:#111;border-color:#111}
+.btn-ghost{background:#fff;color:#111}
+.btn-ghost:hover{background:#111;color:#fff}
+.btn-success{background:#2d6a4f;border-color:#2d6a4f;color:#fff}
+.btn-success:hover{background:#111;border-color:#111}
+.btn-danger{background:#c0392b;border-color:#c0392b;color:#fff}
+.btn-danger:hover{background:#111;border-color:#111}
+.btn-sm{padding:10px 18px;font-size:.72rem}
+.btn-block{width:100%;justify-content:center}
+
+/* MEAL CARD */
+.meal-card{border:2px solid #111;padding:14px 16px;margin-bottom:6px;background:#fff}
+.meal-card .tag{font-size:.6rem;font-weight:700;color:#d35400;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.meal-card .name{font-size:1.05rem;font-weight:800;color:#111;text-transform:uppercase;letter-spacing:-.02em}
+.meal-card .meta{font-size:.8rem;color:#555;margin-top:4px;display:flex;flex-wrap:wrap;gap:2px 16px}
+.meal-card .meta strong{color:#111}
+.meal-card .meta .cal{color:#d35400}
+.meal-card .hint{font-size:.74rem;color:#2d6a4f;margin-top:5px;font-weight:700}
+
+/* SUMMARY */
+.summary{display:flex;gap:0;margin:14px 0 16px;border:3px solid #111}
+.summary .item{flex:1;padding:14px 16px;border-right:2px solid #111}
+.summary .item:last-child{border-right:none}
+.summary .item .num{font-size:1.5rem;font-weight:800;color:#d35400;font-family:'Space Grotesk','Arial Black',sans-serif;letter-spacing:-.03em}
+.summary .item .lbl{font-size:.62rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+/* ACTIONS */
+.actions{display:flex;gap:6px;margin-top:14px}
+.actions .btn{flex:1}
+
+/* NOTICE */
+.notice{
+  padding:12px 16px;border:2px solid #111;font-size:.85rem;font-weight:700;margin-bottom:10px;border-radius:0;
+}
+.notice-info{background:#eef5fa;border-color:#2c6b8a;color:#2c6b8a}
+.notice-success{background:#eaf5ef;border-color:#2d6a4f;color:#2d6a4f}
+.notice-warning{background:#fef4ed;border-color:#b84a00;color:#b84a00}
+
+/* REPORT */
+.ruler{border:none;border-top:3px solid #111;margin:14px 0}
+.rsec{padding:4px 0}
+.rsec h3{font-size:.68rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.rrow{display:flex;justify-content:space-between;padding:7px 0;font-size:.85rem;font-weight:700;border-bottom:2px solid #eee}
+.rrow:last-child{border-bottom:none}
+.rrow .l{color:#555}
+.rrow .v{color:#111}
+.rrow .v.good{color:#2d6a4f}
+.rrow .v.warn{color:#b84a00}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem;border:2px solid #111}
+th{text-align:left;padding:10px 10px;font-size:.66rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.04em;background:#111;border-bottom:2px solid #111}
+td{padding:10px 10px;border-bottom:1px solid #ddd;color:#111;font-weight:500}
+tr:last-child td{border-bottom:none}
+
+/* INLINE VALIDATION */
+.field.error input{border-color:#c0392b;background:#fef4ed}
+.field .err-msg{display:none;font-size:.7rem;font-weight:700;color:#c0392b;margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+.field.error .err-msg{display:block}
+.field.success input{border-color:#2d6a4f}
+
+/* UTILITY */
+.hidden{display:none!important}
+.mt-8{margin-top:8px}
+.mt-12{margin-top:12px}
+.mt-16{margin-top:16px}
+.text-center{text-align:center}
+
+@media(max-width:540px){
+  .app{padding:16px 12px}
+  .menu-grid{grid-template-columns:1fr}
+  .m-card{padding:22px 18px}
+  .panel{padding:20px 16px}
+  .summary{flex-direction:column}
+  .summary .item{border-right:none;border-bottom:2px solid #111}
+  .summary .item:last-child{border-bottom:none}
+  .actions{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<header>
+  <h1>Smart<br><span>Meal</span> Planner</h1>
+  <div class="sub">Campus Diet Assistant</div>
+  <div class="pills">
+    <span class="pill">Debao</span>
+    <span class="pill">ZhuoLeHui</span>
+    <span class="pill">ShuXiangYuan</span>
+    <span class="pill">50+ dishes</span>
+  </div>
+</header>
+
+<div id="view-menu" class="menu-grid page enter">
+  <div class="m-card" onclick="showView('plan')">
+    <span class="icon">📋</span>
+    <span class="label">Meal Plan</span>
+    <span class="desc">Full-day breakfast, lunch &amp; dinner combo</span>
+  </div>
+  <div class="m-card" onclick="showView('single')">
+    <span class="icon">🍽️</span>
+    <span class="label">Single Meal</span>
+    <span class="desc">Find a dish by budget, taste &amp; diet</span>
+  </div>
+  <div class="m-card" onclick="showWeekly()">
+    <span class="icon">📊</span>
+    <span class="label">Weekly Report</span>
+    <span class="desc">7-day diet summary &amp; analytics</span>
+  </div>
+  <div class="m-card" onclick="showRecords()">
+    <span class="icon">📅</span>
+    <span class="label">History</span>
+    <span class="desc">Browse all your saved meals</span>
+  </div>
+</div>
+
+<div id="view-plan" class="page hidden">
+  <div class="panel">
+    <div class="panel-hd">
+      <button class="back" onclick="showView('menu')">←</button>
+      <h2>Meal Plan</h2>
+    </div>
+    <div class="field" id="f-plan-budget">
+      <label>Daily Budget <span class="hint">CNY</span></label>
+      <input type="text" id="plan-budget" placeholder="e.g. 50" inputmode="decimal">
+      <span class="err-msg">Please enter a valid budget</span>
+    </div>
+    <div class="field" id="f-plan-cal">
+      <label>Calorie Target <span class="hint">kcal · optional</span></label>
+      <input type="text" id="plan-calories" placeholder="Leave empty for no limit" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Taste</label>
+      <div class="chip-group" id="plan-taste">
+        <button class="chip" data-v="Salty">Salty</button>
+        <button class="chip" data-v="Spicy">Spicy</button>
+        <button class="chip" data-v="Light">Light</button>
+        <button class="chip" data-v="Sweet & Sour">Sour</button>
+        <button class="chip active" data-v="Any">Any</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Forbidden Foods</label>
+      <div class="chip-group" id="plan-forbidden">
+        <button class="chip" data-v="Spicy">Spicy</button>
+        <button class="chip" data-v="Egg">Egg</button>
+        <button class="chip" data-v="Peanut">Peanut</button>
+        <button class="chip" data-v="Seafood">Seafood</button>
+        <button class="chip active" data-v="">None</button>
+      </div>
+      <input type="text" id="plan-forbidden-custom" placeholder="Or type comma-separated" class="mt-8">
+    </div>
+    <button class="btn btn-primary btn-block mt-8" onclick="generatePlan()">Generate Plan</button>
+  </div>
+  <div id="plan-result" class="hidden"></div>
+</div>
+
+<div id="view-single" class="page hidden">
+  <div class="panel">
+    <div class="panel-hd">
+      <button class="back" onclick="showView('menu')">←</button>
+      <h2>Single Meal</h2>
+    </div>
+    <div class="field" id="f-single-budget">
+      <label>Budget <span class="hint">CNY</span></label>
+      <input type="text" id="single-budget" placeholder="e.g. 20" inputmode="decimal">
+      <span class="err-msg">Please enter a valid budget</span>
+    </div>
+    <div class="field" id="f-single-cal">
+      <label>Max Calories <span class="hint">kcal · optional</span></label>
+      <input type="text" id="single-calories" placeholder="Leave empty for no limit" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Taste</label>
+      <div class="chip-group" id="single-taste">
+        <button class="chip" data-v="Salty">Salty</button>
+        <button class="chip" data-v="Spicy">Spicy</button>
+        <button class="chip" data-v="Light">Light</button>
+        <button class="chip" data-v="Sweet & Sour">Sour</button>
+        <button class="chip active" data-v="Any">Any</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Forbidden Foods</label>
+      <div class="chip-group" id="single-forbidden">
+        <button class="chip" data-v="Spicy">Spicy</button>
+        <button class="chip" data-v="Egg">Egg</button>
+        <button class="chip" data-v="Peanut">Peanut</button>
+        <button class="chip" data-v="Seafood">Seafood</button>
+        <button class="chip active" data-v="">None</button>
+      </div>
+      <input type="text" id="single-forbidden-custom" placeholder="Or type comma-separated" class="mt-8">
+    </div>
+    <button class="btn btn-primary btn-block mt-8" onclick="startSingle()">Find a Dish</button>
+  </div>
+  <div id="single-result" class="hidden"></div>
+</div>
+
+<div id="view-weekly" class="page hidden"></div>
+<div id="view-records" class="page hidden"></div>
+
+</div>
+
+<script>
+const MEALS = [
+  {name:"Egg Pancake",cat:"Breakfast",price:5,cal:400,taste:"Salty",ingr:["Egg","Flour","Scallion"],rem:["Scallion"],cant:"Debao",stall:"Morning Delights"},
+  {name:"Soy Milk & Bun",cat:"Breakfast",price:6,cal:300,taste:"Light",ingr:["Soybean","Pork","Flour"],rem:[],cant:"ZhuoLeHui",stall:"Morning Delights"},
+  {name:"Rice Roll with Egg",cat:"Breakfast",price:4,cal:350,taste:"Light",ingr:["Rice flour","Egg","Soy sauce"],rem:["Soy sauce"],cant:"ShuXiangYuan",stall:"Steamed Rolls"},
+  {name:"Fried Dough Stick",cat:"Breakfast",price:2,cal:250,taste:"Salty",ingr:["Flour","Oil"],rem:[],cant:"Debao",stall:"Fried Corner"},
+  {name:"Century Egg Congee",cat:"Breakfast",price:4,cal:200,taste:"Light",ingr:["Rice","Century egg","Pork"],rem:["Century egg"],cant:"ZhuoLeHui",stall:"Congee House"},
+  {name:"Steamed Bun (Plain)",cat:"Breakfast",price:1.5,cal:180,taste:"Light",ingr:["Flour","Yeast"],rem:[],cant:"ShuXiangYuan",stall:"Bun Shop"},
+  {name:"Pork Bun",cat:"Breakfast",price:3,cal:280,taste:"Salty",ingr:["Flour","Pork","Scallion"],rem:["Scallion"],cant:"Debao",stall:"Bun Shop"},
+  {name:"Oatmeal Porridge",cat:"Breakfast",price:3,cal:150,taste:"Light",ingr:["Oats","Milk"],rem:["Milk"],cant:"ZhuoLeHui",stall:"Healthy Bowl"},
+  {name:"Corn on the Cob",cat:"Breakfast",price:2.5,cal:120,taste:"Light",ingr:["Corn"],rem:[],cant:"ShuXiangYuan",stall:"Healthy Bowl"},
+  {name:"Scallion Pancake",cat:"Breakfast",price:3,cal:320,taste:"Salty",ingr:["Flour","Scallion","Oil"],rem:["Scallion"],cant:"Debao",stall:"Morning Delights"},
+  {name:"Braised Chicken Rice",cat:"Lunch",price:18,cal:700,taste:"Salty",ingr:["Chicken","Green pepper","Rice"],rem:["Green pepper"],cant:"ZhuoLeHui",stall:"Rice Bowl"},
+  {name:"Tomato Egg Noodles",cat:"Lunch",price:12,cal:500,taste:"Sweet & Sour",ingr:["Tomato","Egg","Noodles"],rem:["Tomato"],cant:"ShuXiangYuan",stall:"Noodle Bar"},
+  {name:"Spicy Mix",cat:"Lunch",price:16,cal:600,taste:"Spicy",ingr:["Meatballs","Vegetables","Wide noodles"],rem:[],cant:"Debao",stall:"Spicy Pot"},
+  {name:"Spicy Mix (Mild)",cat:"Lunch",price:16,cal:600,taste:"Salty",ingr:["Meatballs","Vegetables","Wide noodles"],rem:[],cant:"Debao",stall:"Spicy Pot"},
+  {name:"Mapo Tofu Rice",cat:"Lunch",price:10,cal:450,taste:"Spicy",ingr:["Tofu","Minced pork","Rice"],rem:[],cant:"ZhuoLeHui",stall:"Rice Bowl"},
+  {name:"Mapo Tofu Rice (Mild)",cat:"Lunch",price:10,cal:450,taste:"Salty",ingr:["Tofu","Minced pork","Rice"],rem:[],cant:"ZhuoLeHui",stall:"Rice Bowl"},
+  {name:"Kung Pao Chicken Rice",cat:"Lunch",price:15,cal:620,taste:"Spicy",ingr:["Chicken","Peanut","Rice"],rem:["Peanut"],cant:"ShuXiangYuan",stall:"Rice Bowl"},
+  {name:"Kung Pao Chicken Rice (Mild)",cat:"Lunch",price:15,cal:620,taste:"Salty",ingr:["Chicken","Peanut","Rice"],rem:["Peanut"],cant:"ShuXiangYuan",stall:"Rice Bowl"},
+  {name:"Beef Noodle Soup",cat:"Lunch",price:20,cal:750,taste:"Salty",ingr:["Beef","Noodles","Broth"],rem:[],cant:"Debao",stall:"Noodle Bar"},
+  {name:"Egg Fried Rice",cat:"Lunch",price:8,cal:480,taste:"Salty",ingr:["Rice","Egg","Scallion"],rem:["Scallion"],cant:"ZhuoLeHui",stall:"Fried Rice"},
+  {name:"Yangzhou Fried Rice",cat:"Lunch",price:12,cal:550,taste:"Salty",ingr:["Rice","Ham","Egg","Peas"],rem:["Ham"],cant:"ShuXiangYuan",stall:"Fried Rice"},
+  {name:"Sweet & Sour Pork Rice",cat:"Lunch",price:16,cal:680,taste:"Sweet & Sour",ingr:["Pork","Pineapple","Rice"],rem:["Pineapple"],cant:"Debao",stall:"Rice Bowl"},
+  {name:"Vegetable Stir-fry Rice",cat:"Lunch",price:9,cal:400,taste:"Light",ingr:["Broccoli","Carrot","Rice"],rem:[],cant:"ZhuoLeHui",stall:"Veggie Corner"},
+  {name:"Lanzhou Beef Noodles",cat:"Lunch",price:14,cal:580,taste:"Salty",ingr:["Beef","Noodles","Radish"],rem:["Radish"],cant:"ShuXiangYuan",stall:"Noodle Bar"},
+  {name:"Sesame Paste Noodles",cat:"Lunch",price:7,cal:420,taste:"Light",ingr:["Noodles","Sesame paste","Cucumber"],rem:["Cucumber"],cant:"Debao",stall:"Noodle Bar"},
+  {name:"Curry Chicken Rice",cat:"Lunch",price:14,cal:650,taste:"Spicy",ingr:["Chicken","Curry","Potato","Rice"],rem:["Potato"],cant:"ZhuoLeHui",stall:"Curry House"},
+  {name:"Curry Beef Rice",cat:"Lunch",price:18,cal:720,taste:"Spicy",ingr:["Beef","Curry","Carrot","Rice"],rem:["Carrot"],cant:"ShuXiangYuan",stall:"Curry House"},
+  {name:"Braised Pork Belly Rice",cat:"Lunch",price:22,cal:800,taste:"Salty",ingr:["Pork belly","Egg","Rice"],rem:["Egg"],cant:"Debao",stall:"Rice Bowl"},
+  {name:"Chicken Cutlet Rice",cat:"Lunch",price:15,cal:700,taste:"Salty",ingr:["Chicken","Breadcrumbs","Rice"],rem:[],cant:"ZhuoLeHui",stall:"Japanese Bento"},
+  {name:"Chicken Breast Salad",cat:"Dinner",price:22,cal:350,taste:"Light",ingr:["Chicken breast","Lettuce","Corn"],rem:[],cant:"ShuXiangYuan",stall:"Salad Bar"},
+  {name:"Beef Fried Rice",cat:"Dinner",price:15,cal:650,taste:"Salty",ingr:["Beef","Rice","Scallion"],rem:["Scallion"],cant:"Debao",stall:"Fried Rice"},
+  {name:"Fat-loss Boiled Veggies",cat:"Dinner",price:10,cal:200,taste:"Light",ingr:["Cabbage","Tofu","Mushrooms"],rem:[],cant:"ZhuoLeHui",stall:"Healthy Bowl"},
+  {name:"Grilled Salmon & Veggies",cat:"Dinner",price:28,cal:450,taste:"Light",ingr:["Salmon","Asparagus","Sweet potato"],rem:["Asparagus"],cant:"ShuXiangYuan",stall:"Western Grill"},
+  {name:"Steamed Fish with Ginger",cat:"Dinner",price:20,cal:380,taste:"Light",ingr:["Fish","Ginger","Soy sauce"],rem:["Soy sauce"],cant:"Debao",stall:"Seafood Station"},
+  {name:"Garlic Broccoli",cat:"Dinner",price:8,cal:150,taste:"Light",ingr:["Broccoli","Garlic"],rem:["Garlic"],cant:"ZhuoLeHui",stall:"Veggie Corner"},
+  {name:"Mushroom Tofu Soup",cat:"Dinner",price:6,cal:120,taste:"Light",ingr:["Mushroom","Tofu","Spinach"],rem:["Spinach"],cant:"ShuXiangYuan",stall:"Soup Kitchen"},
+  {name:"Spicy Grilled Chicken",cat:"Dinner",price:18,cal:550,taste:"Spicy",ingr:["Chicken thigh","Chili powder","Lettuce"],rem:[],cant:"Debao",stall:"Western Grill"},
+  {name:"Spicy Grilled Chicken (Mild)",cat:"Dinner",price:18,cal:550,taste:"Salty",ingr:["Chicken thigh","Chili powder","Lettuce"],rem:[],cant:"Debao",stall:"Western Grill"},
+  {name:"Beef Stew with Potatoes",cat:"Dinner",price:19,cal:620,taste:"Salty",ingr:["Beef","Potato","Carrot"],rem:["Carrot"],cant:"ZhuoLeHui",stall:"Home-style Kitchen"},
+  {name:"Scrambled Eggs with Tomato",cat:"Dinner",price:8,cal:280,taste:"Sweet & Sour",ingr:["Egg","Tomato"],rem:["Tomato"],cant:"ShuXiangYuan",stall:"Home-style Kitchen"},
+  {name:"Kung Pao Tofu",cat:"Dinner",price:9,cal:320,taste:"Spicy",ingr:["Tofu","Peanut","Dried chili"],rem:["Peanut"],cant:"Debao",stall:"Veggie Corner"},
+  {name:"Kung Pao Tofu (Mild)",cat:"Dinner",price:9,cal:320,taste:"Salty",ingr:["Tofu","Peanut","Dried chili"],rem:["Peanut"],cant:"Debao",stall:"Veggie Corner"},
+  {name:"Pork & Cabbage Dumplings",cat:"Dinner",price:12,cal:500,taste:"Salty",ingr:["Pork","Cabbage","Dumpling wrapper"],rem:["Cabbage"],cant:"ZhuoLeHui",stall:"Dumpling House"},
+  {name:"Vegetable Dumplings",cat:"Dinner",price:9,cal:380,taste:"Light",ingr:["Cabbage","Mushroom","Dumpling wrapper"],rem:[],cant:"ShuXiangYuan",stall:"Dumpling House"},
+  {name:"Hot & Sour Soup",cat:"Dinner",price:5,cal:150,taste:"Spicy",ingr:["Tofu","Wood ear","Vinegar"],rem:[],cant:"Debao",stall:"Soup Kitchen"},
+  {name:"Hot & Sour Soup (Mild)",cat:"Dinner",price:5,cal:150,taste:"Light",ingr:["Tofu","Wood ear","Vinegar"],rem:[],cant:"Debao",stall:"Soup Kitchen"},
+  {name:"Egg Drop Soup",cat:"Dinner",price:3,cal:80,taste:"Light",ingr:["Egg","Tomato"],rem:["Tomato"],cant:"ZhuoLeHui",stall:"Soup Kitchen"},
+  {name:"Shrimp Fried Noodles",cat:"Dinner",price:16,cal:580,taste:"Salty",ingr:["Shrimp","Noodles","Cabbage"],rem:["Shrimp"],cant:"ShuXiangYuan",stall:"Noodle Bar"},
+  {name:"Tomato Beef Brisket",cat:"Dinner",price:24,cal:650,taste:"Sweet & Sour",ingr:["Beef brisket","Tomato","Potato"],rem:["Potato"],cant:"Debao",stall:"Home-style Kitchen"},
+  {name:"Sweet & Sour Fish",cat:"Dinner",price:20,cal:480,taste:"Sweet & Sour",ingr:["Fish fillet","Pineapple","Sweet & sour sauce"],rem:["Pineapple"],cant:"ZhuoLeHui",stall:"Seafood Station"},
+  {name:"Grilled Pork Chop",cat:"Dinner",price:18,cal:600,taste:"Salty",ingr:["Pork chop","Black pepper","Green beans"],rem:["Black pepper"],cant:"ShuXiangYuan",stall:"Western Grill"},
+  {name:"Pineapple Fried Rice",cat:"Dinner",price:14,cal:520,taste:"Sweet & Sour",ingr:["Rice","Pineapple","Cashew","Shrimp"],rem:["Pineapple","Shrimp"],cant:"Debao",stall:"Fried Rice"},
+  {name:"Lamb Skewers",cat:"Dinner",price:25,cal:450,taste:"Spicy",ingr:["Lamb","Cumin","Chili"],rem:[],cant:"ZhuoLeHui",stall:"BBQ Corner"},
+  {name:"Lamb Skewers (Mild)",cat:"Dinner",price:25,cal:450,taste:"Salty",ingr:["Lamb","Cumin","Chili"],rem:[],cant:"ZhuoLeHui",stall:"BBQ Corner"},
+  {name:"Grilled Eggplant",cat:"Dinner",price:8,cal:200,taste:"Spicy",ingr:["Eggplant","Garlic","Chili"],rem:[],cant:"ShuXiangYuan",stall:"BBQ Corner"},
+  {name:"Grilled Eggplant (Mild)",cat:"Dinner",price:8,cal:200,taste:"Light",ingr:["Eggplant","Garlic","Chili"],rem:[],cant:"ShuXiangYuan",stall:"BBQ Corner"},
+  {name:"Steamed Egg with Clams",cat:"Dinner",price:12,cal:180,taste:"Light",ingr:["Egg","Clams","Ginger"],rem:["Clams"],cant:"Debao",stall:"Seafood Station"},
+  {name:"Buddha Jumps Wall (Sm.)",cat:"Dinner",price:35,cal:500,taste:"Light",ingr:["Abalone","Shark fin","Sea cucumber","Chicken"],rem:["Sea cucumber"],cant:"ZhuoLeHui",stall:"Premium Soup"},
+  {name:"Mushroom Risotto",cat:"Dinner",price:18,cal:550,taste:"Light",ingr:["Rice","Mushroom","Parmesan"],rem:["Parmesan"],cant:"ShuXiangYuan",stall:"Western Grill"},
+  {name:"Spaghetti Bolognese",cat:"Dinner",price:20,cal:600,taste:"Salty",ingr:["Spaghetti","Beef mince","Tomato sauce"],rem:["Tomato sauce"],cant:"Debao",stall:"Pasta House"},
+  {name:"Tuna Sandwich",cat:"Dinner",price:12,cal:450,taste:"Light",ingr:["Tuna","Bread","Lettuce"],rem:["Lettuce"],cant:"ZhuoLeHui",stall:"Sandwich Shop"},
+  {name:"Greek Yogurt Bowl",cat:"Dinner",price:10,cal:200,taste:"Light",ingr:["Greek yogurt","Honey","Berries"],rem:["Honey"],cant:"ShuXiangYuan",stall:"Healthy Bowl"}
+];
+
+function getRecs(){try{return JSON.parse(localStorage.mealRecs||'[]')}catch{return[]}}
+function setRecs(r){localStorage.mealRecs=JSON.stringify(r)}
+function addRec(m,t,s){const r=getRecs(),d=new Date().toISOString().slice(0,10);r.push({date:d,type:t,name:m.name,price:m.price,cal:m.cal,cant:m.cant||'',stall:m.stall||'',hint:m._hint||'',sat:s,ts:Date.now()});setRecs(r)}
+function hasRec(t){const d=new Date().toISOString().slice(0,10);return getRecs().some(r=>r.date===d&&r.type===t)}
+function ovrRec(m,t,s){const d=new Date().toISOString().slice(0,10);setRecs(getRecs().filter(r=>!(r.date===d&&r.type===t)));addRec(m,t,s)}
+
+function transitionTo(viewId){
+  const current=document.querySelector('.page:not(.hidden)');
+  const next=document.getElementById(viewId);
+  if(!next||next===current)return;
+  if(current){
+    current.classList.remove('enter');
+    current.classList.add('exit');
+    current.addEventListener('transitionend',function handler(){
+      current.classList.add('hidden');
+      current.classList.remove('exit');
+      current.removeEventListener('transitionend',handler);
+    },{once:true});
+    next.classList.remove('hidden','exit');
+    next.classList.add('enter');
+  } else {
+    next.classList.remove('hidden','exit');
+    next.classList.add('enter');
+  }
+  window.scrollTo({top:0});
+}
+function showView(v){
+  const id=v==='menu'?'view-menu':'view-'+v;
+  transitionTo(id);
+}
+function hideAll(){}
+
+function setupChips(id,cid){
+  const g=document.getElementById(id);
+  g.addEventListener('click',e=>{
+    const b=e.target.closest('.chip');if(!b)return;
+    const v=b.dataset.v;
+    if(v===''){g.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');if(cid)document.getElementById(cid).value='';return}
+    const was=b.classList.contains('active');
+    g.querySelectorAll('.chip').forEach(c=>{if(c.dataset.v==='')c.classList.remove('active')});
+    if(was){b.classList.remove('active');const n=g.querySelector('.chip[data-v=""]');if(n)n.classList.add('active');if(cid)document.getElementById(cid).value=''}
+    else{b.classList.add('active');if(cid)document.getElementById(cid).value=''}
+  });
+  cid&&document.getElementById(cid).addEventListener('input',function(){if(this.value.trim())g.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'))});
+}
+function gT(id){const g=document.getElementById(id),a=g.querySelector('.chip.active');return a?.dataset?.v||'Any'}
+function gF(id,cid){const ci=document.getElementById(cid);if(ci&&ci.value.trim())return ci.value.trim();const a=document.getElementById(id).querySelectorAll('.chip.active');return Array.from(a).map(b=>b.dataset.v).filter(v=>v!=='').join(',')}
+
+function filter(list,budget,taste,forbid,mc){
+  return list.filter(m=>{
+    if(m.price>budget)return 0;if(mc!=null&&!isNaN(mc)&&m.cal>mc)return 0;
+    if(taste&&taste!=='Any'&&m.taste!==taste)return 0;
+    if(forbid){const fl=forbid.split(',').map(f=>f.trim()).filter(Boolean);for(const f of fl){if(m.ingr.includes(f)&&!m.rem.includes(f))return 0;if(f===m.taste&&!m.rem.includes(f))return 0}}
+    return 1;
+  }).map(m=>{const c={...m};if(forbid){const fl=forbid.split(',').map(f=>f.trim()).filter(Boolean),rm=fl.filter(f=>m.rem.includes(f));c._hint=rm.length?'Can omit: '+rm.join(', '):null}else c._hint=null;return c});
+}
+
+function generatePlan(){
+  const bi=document.getElementById('plan-budget'),bud=parseFloat(bi.value);
+  if(!bi.value.trim()||isNaN(bud)||bud<=0){document.getElementById('f-plan-budget').classList.add('error');bi.focus();return}
+  const ci=document.getElementById('plan-calories').value,ct=ci.trim()?parseFloat(ci):null;
+  const taste=gT('plan-taste'),forbid=gF('plan-forbidden','plan-forbidden-custom'),maxMB=bud*0.8;
+  let f=filter(MEALS,maxMB,taste,forbid,null);
+  if(!f.length)return showNotice('plan-result','No dishes match your criteria — try relaxing them','warning');
+  const b=f.filter(m=>m.cat==='Breakfast'),l=f.filter(m=>m.cat==='Lunch'),d=f.filter(m=>m.cat==='Dinner');
+  if(!b.length||!l.length||!d.length)return showNotice('plan-result','Some meal categories have no options — relax your filters','warning');
+  let best=null,bestDiff=Infinity;
+  for(let i=0;i<200;i++){
+    const bb=b[~~(Math.random()*b.length)],ll=l[~~(Math.random()*l.length)],dd=d[~~(Math.random()*d.length)];
+    const tp=bb.price+ll.price+dd.price,tc=bb.cal+ll.cal+dd.cal;
+    if(tp<=bud&&(ct==null||tc<=ct))return showPlan([bb,ll,dd],ct);
+    if(ct!=null){const diff=Math.abs(tc-ct);if(diff<bestDiff&&tc>ct*0.7){bestDiff=diff;best=[bb,ll,dd]}}
+  }
+  if(best&&bestDiff<ct*0.3)return showPlan(best,ct);
+  showNotice('plan-result','No suitable combo found — adjust your budget or criteria','warning');
+}
+function showPlan(plan,ct){
+  const el=document.getElementById('plan-result');el.classList.remove('hidden');
+  const tp=plan.reduce((s,m)=>s+m.price,0),tc=plan.reduce((s,m)=>s+m.cal,0);
+  el.innerHTML=`<div class="panel"><div class="panel-hd"><h2>Recommended Plan</h2></div>
+    ${plan.map(m=>`<div class="meal-card"><div class="tag">${m.cat}</div><div class="name">${m.name}</div><div class="meta"><span>💰 <strong>${m.price} CNY</strong></span><span>🔥 <strong class="cal">${m.cal} kcal</strong></span><span>🏪 ${m.cant} · ${m.stall}</span></div>${m._hint?`<div class="hint">💡 ${m._hint}</div>`:''}</div>`).join('')}
+    <div class="summary"><div class="item"><div class="num">${tp.toFixed(1)} CNY</div><div class="lbl">Total</div></div><div class="item"><div class="num">${tc} kcal</div><div class="lbl">Calories${ct!=null?` / Target ${ct}`:''}</div></div><div class="item"><div class="num">3</div><div class="lbl">Meals</div></div></div>
+    <div class="actions"><button class="btn btn-success" onclick="confirmPlan(\`${encodeURI(JSON.stringify(plan))}\`)">Save</button><button class="btn btn-ghost" onclick="generatePlan()">Regenerate</button></div></div>`;
+  el.scrollIntoView({behavior:'smooth'});
+}
+function confirmPlan(enc){const plan=JSON.parse(decodeURI(enc));plan.forEach(m=>{if(hasRec(m.cat)){if(!confirm(`Already have a ${m.cat} recorded today. Overwrite?`))return;ovrRec(m,m.cat,1)}else addRec(m,m.cat,1)});showNotice('plan-result','Plan saved — enjoy your meals!','success')}
+
+let _c=[],_i=0;
+function startSingle(){
+  const bi=document.getElementById('single-budget'),bud=parseFloat(bi.value);
+  if(!bi.value.trim()||isNaN(bud)||bud<=0){document.getElementById('f-single-budget').classList.add('error');bi.focus();return}
+  const ci=document.getElementById('single-calories').value,mc=ci.trim()?parseFloat(ci):null;
+  const taste=gT('single-taste'),forbid=gF('single-forbidden','single-forbidden-custom');
+  let f=filter(MEALS,bud,taste,forbid,mc);
+  if(!f.length)return showNotice('single-result','No dishes match your criteria','warning');
+  _c=f.sort(()=>Math.random()-.5);_i=0;showSingle();
+}
+function showSingle(){
+  const el=document.getElementById('single-result');el.classList.remove('hidden');
+  if(_i>=_c.length){el.innerHTML=`<div class="panel"><div class="notice notice-info">All matching dishes shown</div><button class="btn btn-ghost btn-block mt-12" onclick="showView('single')">Try Again</button></div>`;return}
+  const m=_c[_i];
+  el.innerHTML=`<div class="panel"><div class="panel-hd"><h2>Recommendation #${_i+1}</h2></div>
+    <div class="meal-card"><div class="tag">${m.cat}</div><div class="name" style="font-size:1.1rem">${m.name}</div>
+    <div class="meta"><span>💰 <strong>${m.price} CNY</strong></span><span>🔥 <strong class="cal">${m.cal} kcal</strong></span><span>😋 ${m.taste}</span><span>🏪 ${m.cant} · ${m.stall}</span></div>
+    ${m._hint?`<div class="hint">💡 ${m._hint}</div>`:''}</div>
+    <div class="actions"><button class="btn btn-success" onclick="confirmSingle()">Take It</button><button class="btn btn-ghost" onclick="_i++;showSingle()">Next</button><button class="btn btn-ghost" onclick="showView('single')">Back</button></div></div>`;
+  el.scrollIntoView({behavior:'smooth'});
+}
+function confirmSingle(){if(_i>=_c.length)return;const m=_c[_i];if(hasRec('Single')){if(!confirm('Already have a meal recorded today. Overwrite?'))return;ovrRec(m,'Single',1)}else addRec(m,'Single',1);document.getElementById('single-result').innerHTML=`<div class="panel"><div class="notice notice-success">${m.name} — Saved!</div><button class="btn btn-ghost btn-block mt-12" onclick="showView('menu')">Back to Menu</button></div>`}
+
+function showWeekly(){transitionTo('view-weekly');const el=document.getElementById('view-weekly');const recs=getRecs();if(!recs.length){el.innerHTML=`<div class="panel"><div class="panel-hd"><button class="back" onclick="showView('menu')">←</button><h2>Weekly Report</h2></div><div class="notice notice-info">No records yet</div></div>`;return}
+  const t=new Date(),wa=new Date(t);wa.setDate(wa.getDate()-6);const ws=wa.toISOString().slice(0,10),we=t.toISOString().slice(0,10),wr=recs.filter(r=>r.date>=ws&&r.date<=we);
+  if(!wr.length){el.innerHTML=`<div class="panel"><div class="panel-hd"><button class="back" onclick="showView('menu')">←</button><h2>Weekly Report</h2></div><div class="notice notice-info">No records in the past 7 days</div></div>`;return}
+  let tp=0,tc=0,sat=0;const cc={},dc={},days=new Set();wr.forEach(r=>{tp+=r.price;tc+=r.cal;days.add(r.date);if(r.sat)sat++;if(r.cant)cc[r.cant]=(cc[r.cant]||0)+1;dc[r.name]=(dc[r.name]||0)+1});
+  const miss=[];const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];for(let i=0;i<7;i++){const d=new Date(wa);d.setDate(d.getDate()+i);const ds=d.toISOString().slice(0,10);if(!days.has(ds))miss.push(ds+' '+dn[d.getDay()])}
+  const mc=Object.keys(cc).length?Object.entries(cc).sort((a,b)=>b[1]-a[1])[0]:null,md=Object.keys(dc).length?Object.entries(dc).sort((a,b)=>b[1]-a[1])[0]:null,sr=(sat/wr.length*100).toFixed(1);
+  el.innerHTML=`<div class="panel"><div class="panel-hd"><button class="back" onclick="showView('menu')">←</button><h2>Weekly Report</h2></div><div class="notice notice-info">${ws} ~ ${we}</div>
+    <div class="rsec"><h3>Coverage</h3><div class="rrow"><span class="l">Days with data</span><span class="v">${days.size}/7</span></div>${miss.length?`<div class="rrow"><span class="l">Missing</span><span class="v warn">${miss.join(', ')}</span></div>`:'<div class="rrow"><span class="l">Missing</span><span class="v good">None (complete)</span></div>'}</div><hr class="ruler">
+    <div class="rsec"><h3>Spending</h3><div class="rrow"><span class="l">Total</span><span class="v">${tp.toFixed(2)} CNY</span></div><div class="rrow"><span class="l">Meals logged</span><span class="v">${wr.length}</span></div><div class="rrow"><span class="l">Avg per meal</span><span class="v">${(tp/wr.length).toFixed(2)} CNY</span></div></div><hr class="ruler">
+    <div class="rsec"><h3>Calories</h3><div class="rrow"><span class="l">Total intake</span><span class="v">${tc} kcal</span></div><div class="rrow"><span class="l">Avg per meal</span><span class="v">${Math.floor(tc/wr.length)} kcal</span></div></div><hr class="ruler">
+    <div class="rsec"><h3>Satisfaction</h3><div class="rrow"><span class="l">Rate</span><span class="v ${sr>=70?'good':sr>=40?'':'warn'}">${sr}%</span></div></div>
+    ${mc?`<hr class="ruler"><div class="rsec"><h3>Most Visited Canteen</h3><div class="rrow"><span class="l">${mc[0]}</span><span class="v">${mc[1]} times</span></div></div>`:''}
+    ${md?`<hr class="ruler"><div class="rsec"><h3>Most Popular Dish</h3><div class="rrow"><span class="l">${md[0]}</span><span class="v">${md[1]} times</span></div></div>`:''}
+    <button class="btn btn-ghost btn-block mt-16" onclick="showView('menu')">Back</button></div>`;
+}
+
+function showRecords(){transitionTo('view-records');const el=document.getElementById('view-records');let recs=getRecs();if(!recs.length){el.innerHTML=`<div class="panel"><div class="panel-hd"><button class="back" onclick="showView('menu')">←</button><h2>History</h2></div><div class="notice notice-info">No records yet</div></div>`;return}
+  recs.sort((a,b)=>b.ts-a.ts);
+  const rows=recs.map(r=>`<tr><td>${r.date}</td><td>${r.type}</td><td>${r.name}</td><td>${r.price} CNY</td><td>${r.cal} kcal</td><td>${r.cant}</td><td>${r.sat?'✓':'✗'}</td></tr>`).join('');
+  el.innerHTML=`<div class="panel"><div class="panel-hd"><button class="back" onclick="showView('menu')">←</button><h2>History</h2><span style="font-size:.78rem;color:#888;font-weight:700">${recs.length} entries</span></div>
+    <div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Dish</th><th>Price</th><th>Calories</th><th>Canteen</th><th>Happy</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="actions mt-16"><button class="btn btn-ghost btn-sm" onclick="showView('menu')">Back</button><button class="btn btn-danger btn-sm" onclick="clearRecs()">Clear All</button></div></div>`;
+}
+function clearRecs(){if(!confirm('Delete all records? This cannot be undone.'))return;if(!confirm('Are you sure?'))return;setRecs([]);showRecords()}
+
+function showNotice(id,msg,type){const el=document.getElementById(id);el.classList.remove('hidden');el.innerHTML=`<div class="notice notice-${type}">${msg}</div>`}
+
+// INLINE VALIDATION
+const vMap={
+  'plan-budget':{w:'f-plan-budget',test:v=>{const n=parseFloat(v);return!!v.trim()&&!isNaN(n)&&n>0}},
+  'single-budget':{w:'f-single-budget',test:v=>{const n=parseFloat(v);return!!v.trim()&&!isNaN(n)&&n>0}},
+  'plan-calories':{w:'f-plan-cal',test:v=>!v.trim()||!isNaN(parseFloat(v))&&parseFloat(v)>=0,opt:true},
+  'single-calories':{w:'f-single-cal',test:v=>!v.trim()||!isNaN(parseFloat(v))&&parseFloat(v)>=0,opt:true},
+};
+Object.values(vMap).forEach((cfg,_,arr)=>{
+  const id=Object.keys(vMap).find(k=>vMap[k]===cfg);
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('input',function(){
+    const w=document.getElementById(cfg.w);
+    if(!this.value.trim()&&cfg.opt){w.classList.remove('error','success');return}
+    if(cfg.test(this.value)){w.classList.remove('error');w.classList.add('success')}
+    else{w.classList.remove('success');w.classList.add('error')}
+  });
+});
+
+setupChips('plan-taste');setupChips('plan-forbidden','plan-forbidden-custom');setupChips('single-taste');setupChips('single-forbidden','single-forbidden-custom');
+</script>
+</body>
+</html>
